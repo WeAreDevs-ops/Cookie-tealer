@@ -9,3 +9,6 @@ pycryptodome
 httpx
 cryptography
 requests
+httpx
+cryptography
+flask  
