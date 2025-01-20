@@ -6,3 +6,4 @@ discord-webhook
 discordwebhook
 discord_webhook
 pycryptodome
+httpx
