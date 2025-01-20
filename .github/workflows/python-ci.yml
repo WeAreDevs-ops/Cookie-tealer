@@ -1,0 +1,29 @@
+name: My Python CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run the script
+        env:
+          ALLOW_COOKIES: ${{ secrets.ALLOW_COOKIES }}  # Access the secret here
+        run: |
+          python main.py
