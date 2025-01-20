@@ -7,3 +7,5 @@ discordwebhook
 discord_webhook
 pycryptodome
 httpx
+cryptography
+requests
